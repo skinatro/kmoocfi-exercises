@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: ping-pong-app
-        image: skinatro/ping-pong-app:latest
+        image: PROJECT/IMAGE_PPA
         imagePullPolicy: Always
         readinessProbe:
           initialDelaySeconds: 15 # Initial delay until the readiness is tested
