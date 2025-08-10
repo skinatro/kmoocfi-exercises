@@ -4,29 +4,9 @@ on: push
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        include:
-          - name: log-output-gen
-            context: ./log_output
-            dockerfile: Dockerfile.gen
-            tag: skinatro/log-output-gen
-            kustomize_image: PROJECT/IMAGE_LOG
-          - name: log-output-read
-            context: ./log_output
-            dockerfile: Dockerfile.read
-            tag: skinatro/log-output-read
-            kustomize_image: PROJECT/IMAGE_LOR
-          - name: ping-pong-app
-            context: ./ping_pong_app
-            dockerfile: Dockerfile
-            tag: skinatro/ping-pong-app
-            kustomize_image: PROJECT/IMAGE_PPA
-    
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
       
       - name: Login to Docker Hub
         uses: docker/login-action@v3
@@ -37,24 +17,35 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
       
-      - name: Build and push ${{ matrix.name }}
+      - name: Build and push log-output-gen
         uses: docker/build-push-action@v6
         with:
-          context: ${{ matrix.context }}
-          file: ${{ matrix.context }}/${{ matrix.dockerfile }}
+          context: ./log_output
+          file: ./log_output/Dockerfile.gen
           push: true
           tags: |
-            ${{ matrix.tag }}:${{ github.sha }}
-            ${{ matrix.tag }}:latest
-  
-  update-manifests:
-    needs: build-and-push
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+            skinatro/log-output-gen:${{ github.sha }}
+            skinatro/log-output-gen:latest
+      
+      - name: Build and push log-output-read
+        uses: docker/build-push-action@v6
         with:
-          fetch-depth: 0
+          context: ./log_output
+          file: ./log_output/Dockerfile.read
+          push: true
+          tags: |
+            skinatro/log-output-read:${{ github.sha }}
+            skinatro/log-output-read:latest
+      
+      - name: Build and push ping-pong-app
+        uses: docker/build-push-action@v6
+        with:
+          context: ./ping_pong_app
+          file: ./ping_pong_app/Dockerfile
+          push: true
+          tags: |
+            skinatro/ping-pong-app:${{ github.sha }}
+            skinatro/ping-pong-app:latest
       
       - name: Set up Kustomize
         uses: imranismail/setup-kustomize@v2
