@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-confmap
+  namespace: exercises
+data:
+  postgres_user: miragekhan
+  postgres_db: pongs

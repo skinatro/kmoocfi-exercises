@@ -1,0 +1,43 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: pong-update-dep
+  namespace: exercises 
+spec:
+  replicas: 4
+  selector:
+    matchLabels:
+      app: ping-pong-app
+  strategy:
+    canary:
+      steps:
+      - setWeight: 25
+      - pause:
+          duration: 30s
+      - analysis:
+          templates:
+            - templateName: pingpong-cpu-usage-rate
+      - setWeight: 50
+      - pause:
+          duration: 30s
+      - setWeight: 100
+  template:
+    metadata:
+      labels:
+        app: ping-pong-app
+    spec:
+      containers:
+        - name: ping-pong-app
+          image: skinatro/ping-pong-app:v1
+          readinessProbe:
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            httpGet:
+              path: /healthz
+              port: 5000
+          livenessProbe:
+            initialDelaySeconds: 20
+            periodSeconds: 5
+            httpGet:
+              path: /healthz
+              port: 5000

@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres-stset
+  namespace: exercises
+spec:
+  serviceName: postgres-svc
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:bullseye
+          ports:
+           - name: db-port
+             containerPort: 5432
+          volumeMounts:
+            - name: postgres-data-storage
+              mountPath: /data
+              subPath: postgres
+          env:
+            - name: POSTGRES_PASSWORD
+              valueFrom: 
+                secretKeyRef:
+                  key: postgres_password
+                  name: postgres-secret
+            - name: POSTGRES_USER
+              valueFrom:
+                configMapKeyRef:
+                  key: postgres_user
+                  name: postgres-confmap
+            - name: POSTGRES_DB
+              valueFrom:
+                configMapKeyRef:
+                  key: postgres_db
+                  name: postgres-confmap
+
+  volumeClaimTemplates:
+    - metadata:
+        name: postgres-data-storage
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        #storageClassName: local-path
+        resources:
+          requests:
+            storage: 100Mi

@@ -1,0 +1,17 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: pingpong-cpu-usage-rate
+spec:
+  metrics:
+    - name: cpu-usage-rate
+      initialDelay: 2m 
+      interval: 1m
+      count: 5
+      successCondition: result[0] < 5
+      failureCondition: result[0] >= 5
+      provider:
+        prometheus:
+          address: http://kube-prometheus-stack-1752-prometheus.prometheus:9090
+          query: |
+            scalar(sum(rate(container_cpu_usage_seconds_total{namespace="exercises"}[5m])) / sum(machine_cpu_cores) * 100)

@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ping-pong-app-depl
+  namespace: exercises
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ping-pong-app
+  template:
+    metadata:
+      labels:
+        app: ping-pong-app
+    spec:
+      containers:
+      - name: ping-pong-app
+        image: skinatro/ping-pong-app:latest
+        imagePullPolicy: Always
+        readinessProbe:
+          initialDelaySeconds: 15 # Initial delay until the readiness is tested
+          periodSeconds: 15 # How often to test
+          httpGet:
+            path: /healthz
+            port: 5000
+        ports:
+          - containerPort: 5000
+        env:
+          - name: DB_HOST
+            value: "postgres-svc"
+          - name: PORT
+            value: "5000"
+          - name: POSTGRES_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: postgres-secret
+                key: postgres_password
+          - name: POSTGRES_USER
+            valueFrom:
+              configMapKeyRef:
+                name: postgres-confmap
+                key: postgres_user
+          - name: POSTGRES_DB
+            valueFrom:
+              configMapKeyRef:
+                name: postgres-confmap
+                key: postgres_db

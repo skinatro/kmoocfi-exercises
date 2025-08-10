@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: log-output-depl
+  namespace: exercises
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: log-output
+  template:
+    metadata:
+      labels:
+        app: log-output
+    spec:
+      containers:
+        - name: log-output-read
+          image: skinatro/log-output-read:latest
+          readinessProbe:
+           initialDelaySeconds: 15 # Initial delay until the readiness is tested
+           periodSeconds: 15 # How often to test
+           httpGet:
+            path: /healthz
+            port: 5000
+          env:
+            - name: PORT
+              value: "5000"
+            - name: MESSAGE
+              valueFrom:
+                configMapKeyRef:
+                  name: exercises-confmap
+                  key: message
+          volumeMounts:
+            - name: shared-logs
+              mountPath: /tmp/kube
+            - name: confmap-vol
+              mountPath: /etc/config
+
+        - name: log-output-gen
+          image: skinatro/log-output-gen:latest
+          volumeMounts:
+            - name: shared-logs
+              mountPath: /tmp/kube
+
+      volumes:
+        - name: shared-logs
+          emptyDir: {}
+        - name: confmap-vol
+          configMap:
+            name: exercises-confmap
+            #persistentVolumeClaim:
+              #claimName: logs-pong-claim
